@@ -39,6 +39,7 @@ public class EncoderDrive extends CommandBase {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    dt.resetEncoders();
     dt.tankDrive(0,0);
   }
 
