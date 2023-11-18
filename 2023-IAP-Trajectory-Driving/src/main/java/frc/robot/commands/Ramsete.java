@@ -25,6 +25,66 @@ import frc.robot.Constants;
 import frc.robot.RobotContainer;
 
 public class Ramsete extends SequentialCommandGroup{
-    String trajectoryJSON = "pathplanner/generatedJSON/New New New Path.wpilib.json";
+    String trajectoryJSON = "pathplanner/generatedJSON/New Path.wpilib.json";
     Trajectory trajectory = new Trajectory();
+
+public Ramsete() {
+    // Add your commands in the addCommands() call, e.g.
+    // addCommands(new FooCommand(), new BarCommand());
+
+    // Create a voltage constraint to ensure we don't accelerate too fast
+    DifferentialDriveVoltageConstraint autoVoltageConstraint = new DifferentialDriveVoltageConstraint(
+        new SimpleMotorFeedforward(
+            Constants.SimConstants.kS,
+            Constants.SimConstants.kV,
+            Constants.SimConstants.kA),
+        Constants.SimConstants.kDriveKinematics,
+        11);
+         // Create config for trajectory
+    TrajectoryConfig config = new TrajectoryConfig(
+        Constants.SimConstants.kMaxSpeed,
+        Constants.SimConstants.kMaxAcceleration)
+        // Add kinematics to ensure max speed is actually obeyed
+        .setKinematics(Constants.SimConstants.kDriveKinematics)
+        // Apply the voltage constraint
+        .addConstraint(autoVoltageConstraint);
+
+    // Using:
+    // https://github.com/mjansen4857/pathplanner/releases/tag/v2023.4.1
+    // Install:
+    
+    try {
+        Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+        trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+      } catch (IOException ex) {
+        DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
+      }
+  
+      RamseteCommand ramseteCommand = new RamseteCommand(
+          trajectory,
+          RobotContainer.dt::getPose,
+          new RamseteController(Constants.SimConstants.kRamseteB, Constants.SimConstants.kRamseteZeta),
+          new SimpleMotorFeedforward(
+              Constants.SimConstants.kS,
+              Constants.SimConstants.kV,
+              Constants.SimConstants.kA),
+          Constants.SimConstants.kDriveKinematics,
+          RobotContainer.dt::getWheelSpeeds,
+          new PIDController(Constants.SimConstants.kPVel, 0, 0),
+          new PIDController(Constants.SimConstants.kPVel, 0, 0),
+          // RamseteCommand passes volts to the callback
+          RobotContainer.dt::tankDriveVolts,
+          RobotContainer.dt);
+  
+      // Reset odometry to the starting pose of the trajectory.
+      // RobotContainer.dt.getField2d().setRobotPose(new Pose2d(0, 0, new
+      // Rotation2d(0)));
+      // RobotContainer.dt.resetOdometry(trajectory.getInitialPose());
+      RobotContainer.dt.getField2d().getObject("traj").setTrajectory(trajectory);
+  
+      CommandBase ramc = ramseteCommand.handleInterrupt(() -> RobotContainer.dt.tankDriveVolts(0.0, 0.0))
+          .andThen(() -> RobotContainer.dt.tankDriveVolts(0.0, 0.0));
+  
+      addCommands(ramc);
+}
 }

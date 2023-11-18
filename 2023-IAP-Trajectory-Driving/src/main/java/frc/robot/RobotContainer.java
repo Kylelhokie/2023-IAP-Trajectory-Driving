@@ -11,11 +11,13 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.TankDrive;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.commands.PIDTurnCCW;
+import frc.robot.commands.Ramsete;
 import frc.robot.commands.EncoderDrive;
 
 public class RobotContainer {
-  DriveTrain dt = new DriveTrain();
+  public static DriveTrain dt = new DriveTrain();
   Joystick j = new Joystick(0);
+  public Ramsete ramsete = new Ramsete();
   public RobotContainer() {
     dt.setDefaultCommand(new TankDrive(dt, j));
     configureBindings();
@@ -25,16 +27,8 @@ public class RobotContainer {
 
 
 public Command getAutonomousCommand() {
+  return ramsete;
   // An example command will be run in autonomous
-  return new SequentialCommandGroup(
-    new EncoderDrive(dt, 1.0),
-    new PIDTurnCCW(dt, -90),
-    new EncoderDrive(dt, 1.0),
-    new PIDTurnCCW(dt, -90),
-    new EncoderDrive(dt, 1.0),
-    new PIDTurnCCW(dt, -90),
-    new EncoderDrive(dt, 1.0)
-  );
 }
 }
 

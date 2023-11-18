@@ -21,6 +21,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
@@ -64,8 +65,8 @@ public class DriveTrain extends SubsystemBase
     drive = new DifferentialDrive(rightDriveTalon, leftDriveTalon);
 
 
-    leftDriveTalon.setNeutralMode(NeutralMode.Coast); //Sets leftDriveTalon to neutral
-    rightDriveTalon.setNeutralMode(NeutralMode.Coast); //Sets rightDriveTalon to neutral
+    leftDriveTalon.setNeutralMode(NeutralMode.Brake); //Sets leftDriveTalon to neutral
+    rightDriveTalon.setNeutralMode(NeutralMode.Brake); //Sets rightDriveTalon to neutral
 
     leftDriveTalon.setInverted(false); //Make sure the leftDriveTalon is inverted compared to the rightDriveTalon so it can move forward and backward correctly
     rightDriveTalon.setInverted(true);  //Make sure the rightDriveTalon is inverted compared to the leftDriveTalon so it can move forward and backward correctly
@@ -81,7 +82,7 @@ public class DriveTrain extends SubsystemBase
     // Create the simulation model of our drivetrain.
     mDriveSim = new DifferentialDrivetrainSim(
         // Create a linear system from our identification gains.
-        LinearSystemId.identifyDrivetrainSystem(Constants.SimConstants.kv,
+        LinearSystemId.identifyDrivetrainSystem(Constants.SimConstants.kV,
         Constants.SimConstants.kA, Constants.SimConstants.kVangular,
         Constants.SimConstants.kAangular),
         DCMotor.getCIM(1), // 1 CIM motor on each side of the drivetrain.
@@ -210,6 +211,29 @@ public class DriveTrain extends SubsystemBase
         public Pose2d getPose() {
           return odometry.getPoseMeters();
         }
+        public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+          return new DifferentialDriveWheelSpeeds(getLeftSpeed(), getRightSpeed());
+
+        }
+
+        public void arcadeDrive(double fwd, double rot) {
+          drive.arcadeDrive(fwd, rot);
+        }
+      
+        public void resetOdometry(Pose2d pose) {
+          resetEncoders();
+          odometry.resetPosition(
+              navx.getRotation2d(), getLeftDistance(), getRightDistance(), pose);
+        }
+        public void tankDriveVolts(double leftVolts, double rightVolts) {
+          // drive.setSafetyEnabled(false);
+          simLeftVoltage = leftVolts;
+          simRightVoltage = rightVolts;
+          leftDriveTalon.setVoltage(leftVolts);
+          rightDriveTalon.setVoltage(rightVolts);
+          // WPILib would spit out "Looptime Overrun!" if this isn't included!
+          drive.feed();
+        }  
     
   @Override
   public void simulationPeriodic() {
@@ -273,4 +297,43 @@ public double getAverageEncoderDistance() {
 public double getTurnRate() {
   return -navx.getRate();
 }
+  /**
+   * Sets the max output of the drive. Useful for scaling the drive to drive more
+   * slowly.
+   *
+   * @param maxOutput the maximum output to which the drive will be constrained
+   */
+  public void setMaxOutput(double maxOutput) {
+    drive.setMaxOutput(maxOutput);
+  }
+
+  /** Zeroes the heading of the robot. */
+  public void zeroHeading() {
+    navx.reset();
+  }
+
+  /**
+   * Returns the heading of the robot.
+   *
+   * @return the robot's heading in degrees, from -180 to 180
+   */
+  public double getHeading() {
+    return -navx.getRotation2d().getDegrees();
+  }
+
+  /**
+   * Returns the turn rate of the robot.
+   *
+   * @return The turn rate of the robot, in degrees per second
+   */
+
+  /**
+   * Returns the field.
+   *
+   * @return The field
+   */
+  public Field2d getField2d() {
+    return mField;
+  }
+  
 }
