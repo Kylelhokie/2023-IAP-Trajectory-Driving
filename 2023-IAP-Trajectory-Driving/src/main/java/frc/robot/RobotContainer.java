@@ -28,11 +28,11 @@ public Command getAutonomousCommand() {
   // An example command will be run in autonomous
   return new SequentialCommandGroup(
     new EncoderDrive(dt, 1.0),
-    new PIDTurnCCW(dt, 90),
+    new PIDTurnCCW(dt, -90),
     new EncoderDrive(dt, 1.0),
-    new PIDTurnCCW(dt, 90),
+    new PIDTurnCCW(dt, -90),
     new EncoderDrive(dt, 1.0),
-    new PIDTurnCCW(dt, 90),
+    new PIDTurnCCW(dt, -90),
     new EncoderDrive(dt, 1.0)
   );
 }

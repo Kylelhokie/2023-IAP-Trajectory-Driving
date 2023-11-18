@@ -20,7 +20,7 @@ public class PIDTurnCCW extends CommandBase {
     this.setPointAngle = setPointAngle; //sets setPointAngle to setPointAngle
     PID.setTolerance(10.0); //sets the tolerance (range of error)
     addRequirements(dt);
-    if (setPointAngle > 0) {
+    if (setPointAngle >= 0) {
       motorSign = 1;//counterclockwise turn
     }
     else {

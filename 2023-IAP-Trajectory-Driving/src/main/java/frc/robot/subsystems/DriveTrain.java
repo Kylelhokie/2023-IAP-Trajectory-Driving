@@ -8,6 +8,8 @@ package frc.robot.subsystems;
 
 import java.lang.reflect.Field;
 
+import javax.naming.spi.NamingManager;
+
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
@@ -127,7 +129,7 @@ public class DriveTrain extends SubsystemBase
     return (0.1524 * Math.PI / 4096) * getTicks();
   }
   public double getAngle(){ //Gets the robot's current angle
-    return navx.getAngle(); 
+    return -navx.getAngle(); 
   }
  
   public void resetNavx(){
